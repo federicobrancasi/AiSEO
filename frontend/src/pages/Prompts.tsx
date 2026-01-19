@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Search, ChevronDown, ChevronRight, ExternalLink, Loader2, Calendar, Hash } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
+import { Search, ChevronDown, ChevronRight, ExternalLink, Loader2, Calendar } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { SentimentBadge } from '../components/ui/Badge';
 import { usePrompts, useBrands, usePromptDetail } from '../hooks/useApi';
@@ -113,6 +114,28 @@ function PromptRow({
   );
 }
 
+function highlightBrands(text: string, brands: Brand[]): React.ReactNode {
+  if (!text || brands.length === 0) return text;
+
+  // Create regex pattern for all brand names (escape special regex characters)
+  const escapedNames = brands.map(b => b.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const pattern = new RegExp(`(${escapedNames.join('|')})`, 'gi');
+
+  const parts = text.split(pattern);
+
+  return parts.map((part, index) => {
+    const brand = brands.find(b => b.name.toLowerCase() === part.toLowerCase());
+    if (brand) {
+      return (
+        <span key={index} style={{ color: brand.color, fontWeight: 600 }}>
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
 function ExpandedPromptDetail({ queryId, brands }: { queryId: string; brands: Brand[] }) {
   const idx = parseInt(queryId.replace('query-', '').replace('prompt-', ''));
   const { data: detail, loading, error } = usePromptDetail(idx);
@@ -171,23 +194,27 @@ function ExpandedPromptDetail({ queryId, brands }: { queryId: string; brands: Br
             <div>
               <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Runs</h4>
               <div className="flex flex-wrap gap-2">
-                {runs.map((run, index) => (
-                  <button
-                    key={run.id}
-                    onClick={() => setSelectedRunIndex(index)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      selectedRunIndex === index
-                        ? 'bg-[var(--accent-primary)] text-white'
-                        : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] border border-[var(--border-subtle)]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Hash className="w-3 h-3" />
-                      <span>Run {run.runNumber}</span>
-                      <span className="text-xs opacity-75">({run.visibility}%)</span>
-                    </div>
-                  </button>
-                ))}
+                {runs.map((run, index) => {
+                  const runDate = new Date(run.scrapedAt);
+                  const monthLabel = runDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                  return (
+                    <button
+                      key={run.id}
+                      onClick={() => setSelectedRunIndex(index)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        selectedRunIndex === index
+                          ? 'bg-[var(--accent-primary)] text-white'
+                          : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] border border-[var(--border-subtle)]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-3 h-3" />
+                        <span>{monthLabel}</span>
+                        <span className="text-xs opacity-75">({run.visibility}%)</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -229,7 +256,7 @@ function ExpandedPromptDetail({ queryId, brands }: { queryId: string; brands: Br
                   <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-3">AI Response</h4>
                   <div className="bg-[var(--bg-card)] rounded-xl p-4 border border-[var(--border-subtle)] max-h-96 overflow-y-auto">
                     <pre className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap font-sans leading-relaxed">
-                      {selectedRun.responseText}
+                      {highlightBrands(selectedRun.responseText, brands)}
                     </pre>
                   </div>
                 </div>
@@ -321,11 +348,22 @@ function BrandMentionCard({ mention, brands }: { mention: PromptBrandMention; br
 }
 
 export function Prompts() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data: prompts, loading: promptsLoading, error: promptsError } = usePrompts();
   const { data: brandsData, loading: brandsLoading } = useBrands();
+
+  // Auto-expand prompt from URL highlight parameter
+  useEffect(() => {
+    const highlightId = searchParams.get('highlight');
+    if (highlightId && prompts) {
+      setExpandedId(highlightId);
+      // Clear the highlight param from URL after using it
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, prompts, setSearchParams]);
 
   const brands: Brand[] = useMemo(() => {
     if (!brandsData) return [];
@@ -334,11 +372,22 @@ export function Prompts() {
 
   const filteredPrompts = useMemo(() => {
     if (!prompts) return [];
-    if (!searchQuery) return prompts;
-    return prompts.filter((p) =>
-      p.query.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [prompts, searchQuery]);
+    let filtered = prompts;
+    if (searchQuery) {
+      filtered = prompts.filter((p) =>
+        p.query.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    // Move expanded prompt to top of list
+    if (expandedId) {
+      const expandedIndex = filtered.findIndex(p => p.id === expandedId);
+      if (expandedIndex > 0) {
+        const expandedPrompt = filtered[expandedIndex];
+        filtered = [expandedPrompt, ...filtered.slice(0, expandedIndex), ...filtered.slice(expandedIndex + 1)];
+      }
+    }
+    return filtered;
+  }, [prompts, searchQuery, expandedId]);
 
   const toggleExpanded = (id: string) => {
     setExpandedId(expandedId === id ? null : id);

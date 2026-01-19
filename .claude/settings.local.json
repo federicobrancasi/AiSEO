@@ -40,7 +40,8 @@
       "Bash(python3:*)",
       "Bash(lsof:*)",
       "Bash(sqlite3:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
