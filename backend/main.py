@@ -44,10 +44,10 @@ def seed_brands():
     from .database import engine
 
     brands_data = [
-        {"id": "shopify", "name": "Shopify", "type": "primary", "color": "#06b6d4"},
+        {"id": "wix", "name": "Wix", "type": "primary", "color": "#06b6d4"},
+        {"id": "shopify", "name": "Shopify", "type": "competitor", "color": "#f59e0b"},
         {"id": "woocommerce", "name": "WooCommerce", "type": "competitor", "color": "#8b5cf6"},
         {"id": "bigcommerce", "name": "BigCommerce", "type": "competitor", "color": "#ec4899"},
-        {"id": "wix", "name": "Wix", "type": "competitor", "color": "#f59e0b"},
         {"id": "squarespace", "name": "Squarespace", "type": "competitor", "color": "#10b981"},
     ]
 
@@ -101,10 +101,10 @@ def get_run_data(session: Session, prompt: Prompt, brands: list[Brand]) -> RunRe
     mentioned_brands = [b for b in brand_responses if b.mentioned]
 
     # Calculate visibility based on Shopify's position (primary brand)
-    shopify_mention = next((b for b in brand_responses if b.brandId == "shopify"), None)
-    if shopify_mention and shopify_mention.mentioned and shopify_mention.position > 0:
+    wix_mention = next((b for b in brand_responses if b.brandId == "wix"), None)
+    if wix_mention and wix_mention.mentioned and wix_mention.position > 0:
         # Position 1 = 100%, Position 2 = 80%, Position 3 = 60%, etc.
-        visibility = max(0, 100 - (shopify_mention.position - 1) * 20)
+        visibility = max(0, 100 - (wix_mention.position - 1) * 20)
     else:
         visibility = 0  # Not mentioned
 
@@ -183,6 +183,8 @@ def get_brands(session: Session = Depends(get_session)):
             )
         )
 
+    # Sort: primary brand first, then by visibility descending
+    result.sort(key=lambda x: (x.type != "primary", -x.visibility))
     return result
 
 
@@ -230,9 +232,9 @@ def get_prompts(session: Session = Depends(get_session)):
             mentioned_brands = [b for b in brand_responses if b.mentioned]
 
             # Calculate visibility based on Shopify's position
-            shopify_mention = next((b for b in brand_responses if b.brandId == "shopify"), None)
-            if shopify_mention and shopify_mention.mentioned and shopify_mention.position > 0:
-                visibility = max(0, 100 - (shopify_mention.position - 1) * 20)
+            wix_mention = next((b for b in brand_responses if b.brandId == "wix"), None)
+            if wix_mention and wix_mention.mentioned and wix_mention.position > 0:
+                visibility = max(0, 100 - (wix_mention.position - 1) * 20)
             else:
                 visibility = 0
 
@@ -389,25 +391,25 @@ def get_metrics(session: Session = Depends(get_session)):
     total_queries = len(unique_queries)
     total_sources = session.exec(select(func.count(Source.id))).one()
 
-    # Get primary brand (Shopify) metrics
-    shopify_mentions = session.exec(
+    # Get primary brand (Wix) metrics
+    wix_mentions = session.exec(
         select(PromptBrandMention).where(
-            PromptBrandMention.brand_id == "shopify",
+            PromptBrandMention.brand_id == "wix",
             PromptBrandMention.mentioned == True,
         )
     ).all()
 
-    # Count unique queries where Shopify is mentioned
-    shopify_queries = set()
-    for m in shopify_mentions:
+    # Count unique queries where Wix is mentioned
+    wix_queries = set()
+    for m in wix_mentions:
         prompt = session.get(Prompt, m.prompt_id)
         if prompt:
-            shopify_queries.add(prompt.query)
+            wix_queries.add(prompt.query)
 
-    visibility = (len(shopify_queries) / total_queries * 100) if total_queries > 0 else 0
+    visibility = (len(wix_queries) / total_queries * 100) if total_queries > 0 else 0
     avg_position = (
-        sum(m.position for m in shopify_mentions if m.position) / len(shopify_mentions)
-        if shopify_mentions
+        sum(m.position for m in wix_mentions if m.position) / len(wix_mentions)
+        if wix_mentions
         else 0
     )
 

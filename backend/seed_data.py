@@ -1655,10 +1655,10 @@ Be wary of hidden costs beyond the monthly subscription. Evaluate:
 def seed_brands(session: Session):
     """Ensure brands exist"""
     brands_data = [
-        {"id": "shopify", "name": "Shopify", "type": "primary", "color": "#06b6d4"},
+        {"id": "wix", "name": "Wix", "type": "primary", "color": "#06b6d4"},
+        {"id": "shopify", "name": "Shopify", "type": "competitor", "color": "#f59e0b"},
         {"id": "woocommerce", "name": "WooCommerce", "type": "competitor", "color": "#8b5cf6"},
         {"id": "bigcommerce", "name": "BigCommerce", "type": "competitor", "color": "#ec4899"},
-        {"id": "wix", "name": "Wix", "type": "competitor", "color": "#f59e0b"},
         {"id": "squarespace", "name": "Squarespace", "type": "competitor", "color": "#10b981"},
     ]
 

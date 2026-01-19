@@ -32,7 +32,15 @@
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_resize",
       "mcp__playwright__browser_press_key",
-      "mcp__playwright__browser_evaluate"
+      "mcp__playwright__browser_evaluate",
+      "mcp__filesystem__create_directory",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(lsof:*)",
+      "Bash(sqlite3:*)",
+      "Bash(pkill:*)"
     ]
   }
 }

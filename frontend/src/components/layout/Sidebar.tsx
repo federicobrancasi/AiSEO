@@ -38,7 +38,7 @@ export function Sidebar({
       <div className={`p-4 border-b border-[var(--border-subtle)] flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
         <div className={`flex items-center ${isCollapsed ? '' : 'gap-3'}`}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-secondary)] flex items-center justify-center animate-pulse-glow flex-shrink-0">
-            <span className="text-white font-bold text-sm tracking-tight">AI</span>
+            <span className="text-white font-bold text-sm tracking-tight">Wix</span>
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">

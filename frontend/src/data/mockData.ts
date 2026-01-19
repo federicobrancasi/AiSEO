@@ -2,14 +2,24 @@ import type { Brand, DailyVisibility, Source, Prompt } from '../types';
 
 export const brands: Brand[] = [
   {
+    id: 'wix',
+    name: 'Wix',
+    type: 'primary',
+    visibility: 35,
+    trend: 'up',
+    sentiment: 'positive',
+    avgPosition: 2.9,
+    color: '#06b6d4', // Cyan - Primary brand
+  },
+  {
     id: 'shopify',
     name: 'Shopify',
-    type: 'primary',
+    type: 'competitor',
     visibility: 52,
     trend: 'up',
     sentiment: 'positive',
     avgPosition: 1.8,
-    color: '#06b6d4', // Cyan - Primary brand
+    color: '#f59e0b', // Amber - Competitor 1
   },
   {
     id: 'woocommerce',
@@ -19,7 +29,7 @@ export const brands: Brand[] = [
     trend: 'stable',
     sentiment: 'positive',
     avgPosition: 2.3,
-    color: '#8b5cf6', // Violet - Competitor 1
+    color: '#8b5cf6', // Violet - Competitor 2
   },
   {
     id: 'bigcommerce',
@@ -29,17 +39,7 @@ export const brands: Brand[] = [
     trend: 'down',
     sentiment: 'neutral',
     avgPosition: 3.1,
-    color: '#ec4899', // Pink - Competitor 2
-  },
-  {
-    id: 'wix',
-    name: 'Wix',
-    type: 'competitor',
-    visibility: 35,
-    trend: 'up',
-    sentiment: 'positive',
-    avgPosition: 2.9,
-    color: '#f59e0b', // Amber - Competitor 3
+    color: '#ec4899', // Pink - Competitor 3
   },
   {
     id: 'squarespace',
@@ -150,7 +150,7 @@ function generatePrompts(): Prompt[] {
     });
 
     const mentionedBrands = brandMentions.filter(b => b.mentioned);
-    const visibility = mentionedBrands.some(b => b.brandId === 'shopify')
+    const visibility = mentionedBrands.some(b => b.brandId === 'wix')
       ? Math.floor(Math.random() * 30) + 50
       : Math.floor(Math.random() * 40) + 20;
 
