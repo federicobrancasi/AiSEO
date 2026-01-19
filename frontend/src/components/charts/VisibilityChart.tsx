@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   AreaChart,
   Area,
@@ -6,7 +7,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import type { DailyVisibility, Brand } from '../../types';
 
@@ -55,25 +55,33 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   return null;
 }
 
-interface LegendPayloadItem {
-  value: string;
-  color?: string;
+interface CustomLegendProps {
+  brands: Brand[];
+  visibleBrands: Set<string>;
+  onToggle: (brandId: string) => void;
 }
 
-function CustomLegend({ payload }: { payload?: LegendPayloadItem[] }) {
-  if (!payload) return null;
-
+function CustomLegend({ brands, visibleBrands, onToggle }: CustomLegendProps) {
   return (
     <div className="flex items-center justify-center gap-6 pt-4 flex-wrap">
-      {payload.map((entry) => (
-        <div key={entry.value} className="flex items-center gap-2">
-          <span
-            className="w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: entry.color, boxShadow: `0 0 6px ${entry.color}` }}
-          />
-          <span className="text-sm text-[var(--text-secondary)]">{entry.value}</span>
-        </div>
-      ))}
+      {brands.map((brand) => {
+        const isActive = visibleBrands.has(brand.id);
+        return (
+          <button
+            key={brand.id}
+            onClick={() => onToggle(brand.id)}
+            className={`flex items-center gap-2 transition-all duration-200 ${
+              isActive ? 'opacity-100' : 'opacity-40'
+            } hover:opacity-100 cursor-pointer`}
+          >
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: brand.color, boxShadow: isActive ? `0 0 6px ${brand.color}` : 'none' }}
+            />
+            <span className="text-sm text-[var(--text-secondary)]">{brand.name}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -83,6 +91,26 @@ export function VisibilityChart({
   brands,
   animationDelay = 0,
 }: VisibilityChartProps) {
+  const [visibleBrands, setVisibleBrands] = useState<Set<string>>(
+    new Set(brands.map(b => b.id))
+  );
+
+  const handleLegendClick = (brandId: string) => {
+    setVisibleBrands(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(brandId)) {
+        newSet.delete(brandId);
+        // If all hidden, show all
+        if (newSet.size === 0) {
+          return new Set(brands.map(b => b.id));
+        }
+      } else {
+        newSet.add(brandId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div
       className="chart-container animate-fade-in-up"
@@ -132,8 +160,7 @@ export function VisibilityChart({
             content={<CustomTooltip />}
             cursor={{ stroke: 'var(--accent-primary)', strokeOpacity: 0.3, strokeWidth: 1 }}
           />
-          <Legend content={<CustomLegend />} />
-          {brands.map((brand) => (
+          {brands.filter(b => visibleBrands.has(b.id)).map((brand) => (
             <Area
               key={brand.id}
               type="monotone"
@@ -159,6 +186,11 @@ export function VisibilityChart({
           ))}
         </AreaChart>
       </ResponsiveContainer>
+      <CustomLegend
+        brands={brands}
+        visibleBrands={visibleBrands}
+        onToggle={handleLegendClick}
+      />
     </div>
   );
 }

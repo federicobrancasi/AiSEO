@@ -26,7 +26,7 @@ export function Sidebar({
   const isOverlay = variant === 'overlay';
 
   const sidebarClasses = [
-    'min-h-screen flex flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-secondary)]/95 backdrop-blur-xl transition-all duration-300 ease-out',
+    'sticky top-0 h-screen flex flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-secondary)]/95 backdrop-blur-xl transition-all duration-300 ease-out overflow-y-auto',
     isCollapsed ? 'w-16' : 'w-64',
     isOverlay && 'fixed top-0 left-0 z-50 transform shadow-2xl',
     isOverlay && !isOpen && '-translate-x-full',
