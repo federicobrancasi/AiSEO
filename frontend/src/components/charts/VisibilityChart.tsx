@@ -97,17 +97,12 @@ export function VisibilityChart({
 
   const handleLegendClick = (brandId: string) => {
     setVisibleBrands(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(brandId)) {
-        newSet.delete(brandId);
-        // If all hidden, show all
-        if (newSet.size === 0) {
-          return new Set(brands.map(b => b.id));
-        }
-      } else {
-        newSet.add(brandId);
+      // If only this brand is visible, show all brands (toggle back)
+      if (prev.size === 1 && prev.has(brandId)) {
+        return new Set(brands.map(b => b.id));
       }
-      return newSet;
+      // Otherwise, show only this brand (solo mode)
+      return new Set([brandId]);
     });
   };
 

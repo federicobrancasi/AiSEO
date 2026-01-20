@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router';
 import {
   Loader2,
@@ -6,6 +6,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -417,11 +418,39 @@ function BrandRow({ brand, isExpanded, onToggle }: BrandRowProps) {
   );
 }
 
+type SortKey = 'visibility' | 'avgPosition' | 'totalMentions';
+
 export function Brands() {
   const { data, loading, error, refetch } = useBrandsDetails();
   const [searchParams] = useSearchParams();
   const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
   const [showAddModal, setShowAddModal] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortKey(null);
+        setSortDirection(null);
+      }
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedBrands = useMemo(() => {
+    if (!data?.brands || !sortKey || !sortDirection) return data?.brands || [];
+    return [...data.brands].sort((a, b) => {
+      const aVal = a[sortKey];
+      const bVal = b[sortKey];
+      const modifier = sortDirection === 'asc' ? 1 : -1;
+      return (aVal - bVal) * modifier;
+    });
+  }, [data?.brands, sortKey, sortDirection]);
 
   // Auto-expand selected brand from query param
   useEffect(() => {
@@ -512,17 +541,47 @@ export function Brands() {
                   <th className="text-left text-sm font-medium text-[var(--text-muted)] pb-3">
                     Brand
                   </th>
-                  <th className="text-center text-sm font-medium text-[var(--text-muted)] pb-3">
-                    Visibility
+                  <th
+                    className="text-center text-sm font-medium text-[var(--text-muted)] pb-3 cursor-pointer hover:text-[var(--text-secondary)] transition-colors"
+                    onClick={() => handleSort('visibility')}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Visibility
+                      {sortKey === 'visibility' ? (
+                        <ChevronUp className={`w-3 h-3 transition-transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+                      ) : (
+                        <ChevronUp className="w-3 h-3 opacity-0 group-hover:opacity-30" />
+                      )}
+                    </div>
                   </th>
-                  <th className="text-center text-sm font-medium text-[var(--text-muted)] pb-3">
-                    Avg. Position
+                  <th
+                    className="text-center text-sm font-medium text-[var(--text-muted)] pb-3 cursor-pointer hover:text-[var(--text-secondary)] transition-colors"
+                    onClick={() => handleSort('avgPosition')}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Avg. Position
+                      {sortKey === 'avgPosition' ? (
+                        <ChevronUp className={`w-3 h-3 transition-transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+                      ) : (
+                        <ChevronUp className="w-3 h-3 opacity-0 group-hover:opacity-30" />
+                      )}
+                    </div>
                   </th>
                   <th className="text-center text-sm font-medium text-[var(--text-muted)] pb-3">
                     Trend
                   </th>
-                  <th className="text-center text-sm font-medium text-[var(--text-muted)] pb-3">
-                    Mentions
+                  <th
+                    className="text-center text-sm font-medium text-[var(--text-muted)] pb-3 cursor-pointer hover:text-[var(--text-secondary)] transition-colors"
+                    onClick={() => handleSort('totalMentions')}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Mentions
+                      {sortKey === 'totalMentions' ? (
+                        <ChevronUp className={`w-3 h-3 transition-transform ${sortDirection === 'desc' ? 'rotate-180' : ''}`} />
+                      ) : (
+                        <ChevronUp className="w-3 h-3 opacity-0 group-hover:opacity-30" />
+                      )}
+                    </div>
                   </th>
                   <th className="text-center text-sm font-medium text-[var(--text-muted)] pb-3">
                     Sentiment
@@ -531,7 +590,7 @@ export function Brands() {
                 </tr>
               </thead>
               <tbody>
-                {data.brands.map((brand) => (
+                {sortedBrands.map((brand) => (
                   <BrandRow
                     key={brand.id}
                     brand={brand}

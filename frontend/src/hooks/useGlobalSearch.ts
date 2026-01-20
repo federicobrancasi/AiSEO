@@ -34,7 +34,7 @@ export function useGlobalSearch(query: string) {
         category: 'brands' as const,
         title: b.name,
         subtitle: `${b.visibility}% visibility`,
-        href: `/?brand=${b.id}`,
+        href: `/brands?selected=${b.id}`,
         color: b.color,
       }));
 
@@ -46,16 +46,16 @@ export function useGlobalSearch(query: string) {
         category: 'sources' as const,
         title: s.domain,
         subtitle: `${s.usage}% usage`,
-        href: `/?source=${s.domain}`,
+        href: `/sources?domain=${encodeURIComponent(s.domain)}`,
       }));
 
     const groups: SearchResultGroup[] = [];
 
-    if (promptResults.length > 0) {
-      groups.push({ category: 'prompts', label: 'Prompts', results: promptResults });
-    }
     if (brandResults.length > 0) {
       groups.push({ category: 'brands', label: 'Brands', results: brandResults });
+    }
+    if (promptResults.length > 0) {
+      groups.push({ category: 'prompts', label: 'Prompts', results: promptResults });
     }
     if (sourceResults.length > 0) {
       groups.push({ category: 'sources', label: 'Sources', results: sourceResults });
