@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router';
-import { Search, ChevronDown, ChevronRight, ChevronUp, ExternalLink, Loader2, Calendar } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, ChevronUp, ExternalLink, Loader2, Calendar, Plus } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { SentimentBadge } from '../components/ui/Badge';
 import { usePrompts, useBrands, usePromptDetail } from '../hooks/useApi';
@@ -446,9 +446,9 @@ export function Prompts() {
       />
 
       <div className="p-8">
-        {/* Search */}
-        <div className="mb-6 animate-fade-in-up delay-100">
-          <div className="relative max-w-md">
+        {/* Search and Add Button */}
+        <div className="flex items-center justify-between gap-4 mb-6 animate-fade-in-up delay-100">
+          <div className="relative max-w-md flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
               type="text"
@@ -458,6 +458,17 @@ export function Prompts() {
               className="input-dark w-full pr-4 py-2.5 text-sm"
               style={{ paddingLeft: '2.5rem' }}
             />
+          </div>
+          <div className="relative group/addprompt">
+            <button
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[var(--accent-primary)] text-white font-medium opacity-50 cursor-not-allowed"
+            >
+              <Plus className="w-4 h-4" />
+              Add Prompt
+            </button>
+            <div className="absolute right-0 top-full mt-2 px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-xs text-[var(--text-muted)] whitespace-nowrap opacity-0 invisible group-hover/addprompt:opacity-100 group-hover/addprompt:visible transition-all duration-200 z-50 shadow-lg">
+              Coming soon!
+            </div>
           </div>
         </div>
 
