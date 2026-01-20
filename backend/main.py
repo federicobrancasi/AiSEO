@@ -54,7 +54,7 @@ def on_startup():
 
 
 def seed_brands():
-    """Seed initial brand data if not exists"""
+    """Seed initial brand data if not exists (handles concurrent workers)"""
     from sqlmodel import Session
     from database import engine
 
@@ -68,10 +68,15 @@ def seed_brands():
 
     with Session(engine) as session:
         for brand_data in brands_data:
-            existing = session.get(Brand, brand_data["id"])
-            if not existing:
-                session.add(Brand(**brand_data))
-        session.commit()
+            # Use merge to handle race condition with multiple workers
+            # merge() will insert if not exists, or update if exists
+            brand = Brand(**brand_data)
+            session.merge(brand)
+        try:
+            session.commit()
+        except Exception:
+            # Ignore errors from concurrent seeding (race condition)
+            session.rollback()
 
 
 def get_run_data(session: Session, prompt: Prompt, brands: list[Brand]) -> RunResponse:

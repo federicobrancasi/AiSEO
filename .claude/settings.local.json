@@ -41,7 +41,9 @@
       "Bash(lsof:*)",
       "Bash(sqlite3:*)",
       "Bash(pkill:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:render.com)"
     ]
   }
 }
